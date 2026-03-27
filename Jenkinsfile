@@ -69,14 +69,32 @@ spec:
         }
 
         stage('Upload to Nexus') {
-            steps {
-                container('maven') {
-                    dir('user-service') {
-                        sh 'mvn deploy -DskipTests'
-                    }
+    steps {
+        container('maven') {
+            withCredentials([usernamePassword(credentialsId: 'nexus-cred', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                dir('user-service') {
+                    sh """
+                    mkdir -p ~/.m2
+
+                    cat > ~/.m2/settings.xml <<EOF
+<settings>
+  <servers>
+    <server>
+      <id>nexus-releases</id>
+      <username>${NEXUS_USER}</username>
+      <password>${NEXUS_PASS}</password>
+    </server>
+  </servers>
+</settings>
+EOF
+
+                    mvn deploy -DskipTests
+                    """
                 }
             }
         }
+    }
+}
 
         stage('Build Docker Image') {
             steps {
