@@ -1,5 +1,4 @@
-
- pipeline {
+pipeline {
     agent any
 
     environment {
@@ -8,12 +7,6 @@
     }
 
     stages {
-
-        stage('Checkout Code') {
-            steps {
-                git 'https://github.com/your-repo/netflix-clone.git'
-            }
-        }
 
         stage('Build') {
             steps {
