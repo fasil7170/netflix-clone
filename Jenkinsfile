@@ -95,13 +95,16 @@ EOF
             }
         }
 
-        stage('Build Docker Image') {
+       stage('Build Docker Image') {
     steps {
         container('docker') {
             sh '''
             echo "Waiting for Docker daemon..."
             sleep 10
             docker info
+
+            echo "Checking JAR file..."
+            ls -la user-service/target
 
             cd user-service
             docker build -t $DOCKER_IMAGE:$TAG .
