@@ -150,15 +150,19 @@ EOF
                     sed -i "s|image:.*|image: $DOCKER_IMAGE:$TAG|" k8s/deployment.yaml
                     '''
                 }
-            }
-        }
-
-       stage('Commit & Push Changes') {
+            }stage('Commit & Push Changes') {
     steps {
         container('maven') {
-            
-            // 🔥 This is mandatory
-            checkout scm
+
+            // ✅ Proper checkout (same as first stage)
+            checkout([
+                $class: 'GitSCM',
+                branches: [[name: '*/main']],
+                userRemoteConfigs: [[
+                    url: 'https://github.com/fasil7170/netflix-clone.git',
+                    credentialsId: 'github-cred'
+                ]]
+            ])
 
             withCredentials([usernamePassword(
                 credentialsId: 'git-cred',
@@ -171,14 +175,17 @@ EOF
                 ls -la
 
                 git config user.email "rkftrip@gmail.com"
-                git config user.name "rkftrip"
+                git config user.name "fasil7170"
 
                 git add k8s/deployment.yaml
                 git commit -m "Update image tag" || echo "No changes"
 
-                git push https://${GIT_USER}:${GIT_PASS}@github.com/<your-repo>.git HEAD:main
+                git push https://${GIT_USER}:${GIT_PASS}@github.com/fasil7170/netflix-clone.git HEAD:main
                 '''
             }
         }
     }
 }
+        }
+
+       
