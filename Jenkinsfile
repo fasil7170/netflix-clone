@@ -21,7 +21,6 @@ spec:
     command:
     - dockerd-entrypoint.sh
     tty: true
-
 """
         }
     }
@@ -84,6 +83,9 @@ spec:
   </servers>
 </settings>
 EOF
+
+                            echo "Setting dynamic version..."
+                            mvn versions:set -DnewVersion=1.0.$BUILD_NUMBER
 
                             mvn deploy -DskipTests
                             """
