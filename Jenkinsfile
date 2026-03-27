@@ -140,24 +140,31 @@ EOF
        stage('Commit & Push Changes') {
     steps {
         container('maven') {
-            // ✅ Ensure repo exists
+
+            // ✅ Always ensure repo is present
             checkout scm
 
-            withCredentials([usernamePassword(credentialsId: 'github-cred', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
-                sh '''
-                pwd
-                ls -la
+            dir("${env.WORKSPACE}") {
 
-                git config user.email "rkftrip@gmail.com"
-                git config user.name "fasil7170"
+                withCredentials([usernamePassword(credentialsId: 'github-cred', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
 
-                git remote set-url origin https://$GIT_USER:$GIT_PASS@github.com/fasil7170/netflix-clone.git
+                    sh '''
+                    echo "Current directory:"
+                    pwd
+                    ls -la
 
-                git add .
-                git commit -m "Updated image to '$TAG'" || echo "No changes"
-                git push origin main
-                '''
+                    git config user.email "jenkins@local"
+                    git config user.name "jenkins"
+
+                    git remote set-url origin https://$GIT_USER:$GIT_PASS@github.com/fasil7170/netflix-clone.git
+
+                    git add .
+                    git commit -m "Updated image to '$TAG'" || echo "No changes"
+                    git push origin main
+                    '''
+                }
             }
         }
     }
+}
 }
