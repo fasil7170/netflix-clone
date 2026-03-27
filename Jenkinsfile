@@ -159,7 +159,7 @@ EOF
                 dir("${env.WORKSPACE}") {
                     withCredentials([usernamePassword(credentialsId: 'github-cred', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
                         sh '''
-                        git config user.email "rkfgtip@gmail.com"
+                        git config user.email "rkftrip@gmail.com"
                         git config user.name "fasil7170"
 
                         git remote set-url origin https://$GIT_USER:$GIT_PASS@github.com/fasil7170/netflix-clone.git
