@@ -10,14 +10,12 @@ spec:
   containers:
   - name: maven
     image: maven:3.9.9-eclipse-temurin-17
-    command:
-    - cat
+    command: ['cat']
     tty: true
 
   - name: docker
     image: docker:24.0.5
-    command:
-    - cat
+    command: ['cat']
     tty: true
     volumeMounts:
     - name: docker-sock
@@ -34,7 +32,6 @@ spec:
     environment {
         DOCKER_IMAGE = "fazil2664/user-service"
         TAG = "${BUILD_NUMBER}"
-        GIT_REPO = "https://github.com/fasil7170/netflix-clone.git"
     }
 
     stages {
@@ -42,7 +39,9 @@ spec:
         stage('Build') {
             steps {
                 container('maven') {
-                    sh 'mvn clean package -DskipTests'
+                    dir('user-service') {
+                        sh 'mvn clean package -DskipTests'
+                    }
                 }
             }
         }
@@ -50,7 +49,9 @@ spec:
         stage('Test') {
             steps {
                 container('maven') {
-                    sh 'mvn test'
+                    dir('user-service') {
+                        sh 'mvn test'
+                    }
                 }
             }
         }
@@ -58,8 +59,10 @@ spec:
         stage('SonarQube Analysis') {
             steps {
                 container('maven') {
-                    withSonarQubeEnv('sonar-server') {
-                        sh 'mvn sonar:sonar'
+                    dir('user-service') {
+                        withSonarQubeEnv('sonar-server') {
+                            sh 'mvn sonar:sonar'
+                        }
                     }
                 }
             }
@@ -68,7 +71,9 @@ spec:
         stage('Upload to Nexus') {
             steps {
                 container('maven') {
-                    sh 'mvn deploy -DskipTests'
+                    dir('user-service') {
+                        sh 'mvn deploy -DskipTests'
+                    }
                 }
             }
         }
@@ -96,29 +101,25 @@ spec:
 
         stage('Update K8s Manifest') {
             steps {
-                container('maven') {
-                    sh """
-                    sed -i 's|image:.*|image: $DOCKER_IMAGE:$TAG|' k8s/deployment.yaml
-                    """
-                }
+                sh """
+                sed -i 's|image:.*|image: $DOCKER_IMAGE:$TAG|' k8s/deployment.yaml
+                """
             }
         }
 
         stage('Commit & Push Changes') {
             steps {
-                container('maven') {
-                    withCredentials([usernamePassword(credentialsId: 'github-cred', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
-                        sh """
-                        git config user.email "jenkins@local"
-                        git config user.name "jenkins"
+                withCredentials([usernamePassword(credentialsId: 'github-cred', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+                    sh """
+                    git config user.email "jenkins@local"
+                    git config user.name "jenkins"
 
-                        git remote set-url origin https://${GIT_USER}:${GIT_PASS}@github.com/fasil7170/netflix-clone.git
+                    git remote set-url origin https://${GIT_USER}:${GIT_PASS}@github.com/fasil7170/netflix-clone.git
 
-                        git add .
-                        git commit -m "Updated image to $TAG" || echo "No changes to commit"
-                        git push origin main
-                        """
-                    }
+                    git add .
+                    git commit -m "Updated image to $TAG" || echo "No changes"
+                    git push origin main
+                    """
                 }
             }
         }
