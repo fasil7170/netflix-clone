@@ -32,18 +32,26 @@ spec:
 
     stages {
 
-        stage('Build') {
-    steps {
-        container('maven') {
-            dir('user-service') {
-                sh '''
-                mvn clean package -DskipTests
-                ls -la target
-                '''
+        stage('Checkout') {
+            steps {
+                container('maven') {
+                    checkout scm
+                }
             }
         }
-    }
-}
+
+        stage('Build') {
+            steps {
+                container('maven') {
+                    dir('user-service') {
+                        sh '''
+                        mvn clean package -DskipTests
+                        ls -la target
+                        '''
+                    }
+                }
+            }
+        }
 
         stage('Test') {
             steps {
@@ -72,7 +80,7 @@ spec:
                 container('maven') {
                     withCredentials([usernamePassword(credentialsId: 'nexus-cred', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                         dir('user-service') {
-                            sh """
+                            sh '''
                             mkdir -p ~/.m2
 
                             cat > ~/.m2/settings.xml <<EOF
@@ -80,8 +88,8 @@ spec:
   <servers>
     <server>
       <id>nexus-releases</id>
-      <username>${NEXUS_USER}</username>
-      <password>${NEXUS_PASS}</password>
+      <username>$NEXUS_USER</username>
+      <password>$NEXUS_PASS</password>
     </server>
   </servers>
 </settings>
@@ -91,30 +99,30 @@ EOF
                             mvn versions:set -DnewVersion=1.0.$BUILD_NUMBER
 
                             mvn deploy -DskipTests
-                            """
+                            '''
                         }
                     }
                 }
             }
         }
 
-       stage('Build Docker Image') {
-    steps {
-        container('docker') {
-            sh '''
-            echo "Waiting for Docker daemon..."
-            sleep 10
-            docker info
+        stage('Build Docker Image') {
+            steps {
+                container('docker') {
+                    sh '''
+                    echo "Waiting for Docker daemon..."
+                    sleep 10
+                    docker info
 
-            echo "Checking JAR file..."
-            ls -la user-service/target
+                    echo "Checking JAR file..."
+                    ls -la user-service/target
 
-            cd user-service
-            docker build -t $DOCKER_IMAGE:$TAG .
-            '''
+                    cd user-service
+                    docker build -t $DOCKER_IMAGE:$TAG .
+                    '''
+                }
+            }
         }
-    }
-}
 
         stage('Push Docker Image') {
             steps {
@@ -131,34 +139,27 @@ EOF
 
         stage('Update K8s Manifest') {
             steps {
-                sh """
-                sed -i 's|image:.*|image: $DOCKER_IMAGE:$TAG|' k8s/deployment.yaml
-                """
+                container('maven') {
+                    sh '''
+                    sed -i "s|image:.*|image: $DOCKER_IMAGE:$TAG|" k8s/deployment.yaml
+                    '''
+                }
             }
         }
 
-       stage('Commit & Push Changes') {
-    steps {
-        container('maven') {
+        stage('Commit & Push Changes') {
+            steps {
+                container('maven') {
+                    sh '''
+                    git config user.email "rkftrip@gmail.com"
+                    git config user.name "fasil7170"
 
-            // 🔥 THIS IS REQUIRED
-            checkout scm
-
-            withCredentials([usernamePassword(credentialsId: 'github-cred', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
-
-                sh '''
-                pwd
-                ls -la
-
-                git config user.email "jenkins@local"
-                git config user.name "jenkins"
-
-                git add .
-                git commit -m "Updated image to '$TAG'" || echo "No changes"
-                git push origin main
-                '''
+                    git add .
+                    git commit -m "Updated image to '$TAG'" || echo "No changes"
+                    git push origin main
+                    '''
+                }
             }
         }
     }
-}
 }
