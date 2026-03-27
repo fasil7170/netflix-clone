@@ -35,7 +35,14 @@ spec:
         stage('Checkout') {
             steps {
                 container('maven') {
-                    checkout scm
+                    checkout([
+                        $class: 'GitSCM',
+                        branches: [[name: '*/main']],
+                        userRemoteConfigs: [[
+                            url: 'https://github.com/fasil7170/netflix-clone.git',
+                            credentialsId: 'github-cred'
+                        ]]
+                    ])
                 }
             }
         }
@@ -148,24 +155,29 @@ EOF
         }
 
         stage('Commit & Push Changes') {
-    steps {
-        container('maven') {
+            steps {
+                container('maven') {
 
-            // 🔥 FIX: checkout AGAIN inside this container
-            checkout scm
+                    // ✅ Ensure repo exists in THIS container
+                    checkout([
+                        $class: 'GitSCM',
+                        branches: [[name: '*/main']],
+                        userRemoteConfigs: [[
+                            url: 'https://github.com/fasil7170/netflix-clone.git',
+                            credentialsId: 'github-cred'
+                        ]]
+                    ])
 
-            sh '''
-            pwd
-            ls -la
+                    sh '''
+                    git config user.email "jenkins@local"
+                    git config user.name "jenkins"
 
-            git config user.email "jenkins@local"
-            git config user.name "jenkins"
-
-            git add .
-            git commit -m "Updated image to '$TAG'" || echo "No changes"
-            git push origin main
-            '''
+                    git add .
+                    git commit -m "Updated image to '$TAG'" || echo "No changes"
+                    git push origin main
+                    '''
+                }
+            }
         }
     }
-}
 }
