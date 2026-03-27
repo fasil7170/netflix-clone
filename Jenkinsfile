@@ -140,19 +140,19 @@ EOF
         stage('Commit & Push Changes') {
     steps {
         container('maven') {
-            withCredentials([usernamePassword(credentialsId: 'github-cred', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
-                sh '''
-                cd $WORKSPACE
+            dir("${env.WORKSPACE}") {
+                withCredentials([usernamePassword(credentialsId: 'github-cred', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+                    sh '''
+                    git config user.email "jenkins@local"
+                    git config user.name "jenkins"
 
-                git config user.email "jenkins@local"
-                git config user.name "jenkins"
+                    git remote set-url origin https://$GIT_USER:$GIT_PASS@github.com/fasil7170/netflix-clone.git
 
-                git remote set-url origin https://$GIT_USER:$GIT_PASS@github.com/fasil7170/netflix-clone.git
-
-                git add .
-                git commit -m "Updated image to '$TAG'" || echo "No changes"
-                git push origin main
-                '''
+                    git add .
+                    git commit -m "Updated image to $TAG" || echo "No changes"
+                    git push origin main
+                    '''
+                }
             }
         }
     }
