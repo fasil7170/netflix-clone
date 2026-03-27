@@ -33,14 +33,17 @@ spec:
     stages {
 
         stage('Build') {
-            steps {
-                container('maven') {
-                    dir('user-service') {
-                        sh 'mvn clean package -DskipTests'
-                    }
-                }
+    steps {
+        container('maven') {
+            dir('user-service') {
+                sh '''
+                mvn clean package -DskipTests
+                ls -la target
+                '''
             }
         }
+    }
+}
 
         stage('Test') {
             steps {
