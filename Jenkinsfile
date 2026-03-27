@@ -8,23 +8,20 @@ apiVersion: v1
 kind: Pod
 spec:
   containers:
+
   - name: maven
     image: maven:3.9.9-eclipse-temurin-17
     command: ['cat']
     tty: true
 
   - name: docker
-    image: docker:24.0.5
-    command: ['cat']
+    image: docker:24.0.5-dind
+    securityContext:
+      privileged: true
+    command:
+    - dockerd-entrypoint.sh
     tty: true
-    volumeMounts:
-    - name: docker-sock
-      mountPath: /var/run/docker.sock
 
-  volumes:
-  - name: docker-sock
-    hostPath:
-      path: /var/run/docker.sock
 """
         }
     }
@@ -69,14 +66,14 @@ spec:
         }
 
         stage('Upload to Nexus') {
-    steps {
-        container('maven') {
-            withCredentials([usernamePassword(credentialsId: 'nexus-cred', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
-                dir('user-service') {
-                    sh """
-                    mkdir -p ~/.m2
+            steps {
+                container('maven') {
+                    withCredentials([usernamePassword(credentialsId: 'nexus-cred', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                        dir('user-service') {
+                            sh """
+                            mkdir -p ~/.m2
 
-                    cat > ~/.m2/settings.xml <<EOF
+                            cat > ~/.m2/settings.xml <<EOF
 <settings>
   <servers>
     <server>
@@ -88,18 +85,23 @@ spec:
 </settings>
 EOF
 
-                    mvn deploy -DskipTests
-                    """
+                            mvn deploy -DskipTests
+                            """
+                        }
+                    }
                 }
             }
         }
-    }
-}
 
         stage('Build Docker Image') {
             steps {
                 container('docker') {
-                    sh "docker build -t $DOCKER_IMAGE:$TAG user-service/"
+                    sh '''
+                    echo "Waiting for Docker daemon..."
+                    sleep 10
+                    docker info
+                    docker build -t $DOCKER_IMAGE:$TAG user-service/
+                    '''
                 }
             }
         }
@@ -108,10 +110,10 @@ EOF
             steps {
                 container('docker') {
                     withCredentials([usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                        sh """
+                        sh '''
                         echo $PASS | docker login -u $USER --password-stdin
                         docker push $DOCKER_IMAGE:$TAG
-                        """
+                        '''
                     }
                 }
             }
