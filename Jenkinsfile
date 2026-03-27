@@ -141,16 +141,17 @@ EOF
     steps {
         container('maven') {
 
+            // 🔥 THIS IS REQUIRED
             checkout scm
 
             withCredentials([usernamePassword(credentialsId: 'github-cred', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
 
                 sh '''
+                pwd
+                ls -la
+
                 git config user.email "jenkins@local"
                 git config user.name "jenkins"
-
-                git config credential.helper store
-                echo "https://$GIT_USER:$GIT_PASS@github.com" > ~/.git-credentials
 
                 git add .
                 git commit -m "Updated image to '$TAG'" || echo "No changes"
