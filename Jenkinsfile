@@ -154,24 +154,28 @@ EOF
         }
 
         stage('Commit & Push Changes') {
-            steps {
-                // ✅ Run Git operations at agent level to avoid .git issues
-                dir("${env.WORKSPACE}") {
-                    withCredentials([usernamePassword(credentialsId: 'github-cred', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
-                        sh '''
-                        git config user.email "rkftrip@gmail.com"
-                        git config user.name "fasil7170"
+    steps {
+        container('maven') {
+            checkout scm   // 🔥 VERY IMPORTANT
 
-                        git remote set-url origin https://$GIT_USER:$GIT_PASS@github.com/fasil7170/netflix-clone.git
+            withCredentials([usernamePassword(
+                credentialsId: 'git-cred',
+                usernameVariable: 'GIT_USER',
+                passwordVariable: 'GIT_PASS'
+            )]) {
+                sh '''
+                git config user.email "rkftrip@gmail.com"
+                git config user.name "rkftrip"
 
-                        git add .
-                        git commit -m "Updated image to $TAG" || echo "No changes"
-                        git push origin main
-                        '''
-                    }
-                }
+                git add k8s/deployment.yaml
+                git commit -m "Update image tag"
+
+                git push https://${GIT_USER}:${GIT_PASS}@github.com/<your-repo>.git HEAD:main
+                '''
             }
         }
+    }
+}
 
     }
 }
