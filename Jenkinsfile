@@ -148,18 +148,23 @@ EOF
         }
 
         stage('Commit & Push Changes') {
-            steps {
-                container('maven') {
-                    sh '''
-                    git config user.email "rkftrip@gmail.com"
-                    git config user.name "fasil7170"
+    steps {
+        container('maven') {
 
-                    git add .
-                    git commit -m "Updated image to '$TAG'" || echo "No changes"
-                    git push origin main
-                    '''
-                }
-            }
+            // 🔥 FIX: checkout AGAIN inside this container
+            checkout scm
+
+            sh '''
+            pwd
+            ls -la
+
+            git config user.email "jenkins@local"
+            git config user.name "jenkins"
+
+            git add .
+            git commit -m "Updated image to '$TAG'" || echo "No changes"
+            git push origin main
+            '''
         }
     }
 }
