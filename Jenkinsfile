@@ -34,16 +34,15 @@ spec:
 
         stage('Checkout') {
             steps {
-                container('maven') {
-                    checkout([
-                        $class: 'GitSCM',
-                        branches: [[name: '*/main']],
-                        userRemoteConfigs: [[
-                            url: 'https://github.com/fasil7170/netflix-clone.git',
-                            credentialsId: 'github-cred'
-                        ]]
-                    ])
-                }
+                // ✅ Checkout at agent level (not inside a container)
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/fasil7170/netflix-clone.git',
+                        credentialsId: 'github-cred'
+                    ]]
+                ])
             }
         }
 
@@ -156,28 +155,23 @@ EOF
 
         stage('Commit & Push Changes') {
             steps {
-                container('maven') {
+                // ✅ Run Git operations at agent level to avoid .git issues
+                dir("${env.WORKSPACE}") {
+                    withCredentials([usernamePassword(credentialsId: 'github-cred', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+                        sh '''
+                        git config user.email "jenkins@local"
+                        git config user.name "jenkins"
 
-                    
-                    checkout([
-                        $class: 'GitSCM',
-                        branches: [[name: '*/main']],
-                        userRemoteConfigs: [[
-                            url: 'https://github.com/fasil7170/netflix-clone.git',
-                            credentialsId: 'github-cred'
-                        ]]
-                    ])
+                        git remote set-url origin https://$GIT_USER:$GIT_PASS@github.com/fasil7170/netflix-clone.git
 
-                    sh '''
-                    git config user.email "jenkins@local"
-                    git config user.name "jenkins"
-
-                    git add .
-                    git commit -m "Updated image to '$TAG'" || echo "No changes"
-                    git push origin main
-                    '''
+                        git add .
+                        git commit -m "Updated image to $TAG" || echo "No changes"
+                        git push origin main
+                        '''
+                    }
                 }
             }
         }
+
     }
 }
