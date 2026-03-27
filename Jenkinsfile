@@ -170,7 +170,7 @@ EOF
                 git add k8s/deployment.yaml
                 git commit -m "Update image tag"
 
-                git push https://${GIT_USER}:${GIT_PASS}@github.com/<your-repo>.git HEAD:main
+                git push https://${GIT_USER}:${GIT_PASS}@github.com/netflix-clone.git HEAD:main
                 '''
             }
         }
