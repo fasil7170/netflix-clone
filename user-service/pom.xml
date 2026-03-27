@@ -11,6 +11,7 @@
     <packaging>jar</packaging>
 
     <name>user-service</name>
+    <description>Netflix Clone User Service</description>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -25,11 +26,13 @@
 
     <dependencies>
 
+        <!-- Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+        <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -41,15 +44,19 @@
     <build>
         <plugins>
 
+            <!-- ✅ IMPORTANT FIX: Explicit main class -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.netflix.clone.UserServiceApplication</mainClass>
+                </configuration>
             </plugin>
 
         </plugins>
     </build>
 
-    <!-- ✅ Nexus Configuration (INSIDE project) -->
+    <!-- ✅ Nexus Configuration -->
     <distributionManagement>
         <repository>
             <id>nexus-releases</id>
