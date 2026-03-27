@@ -139,7 +139,7 @@ EOF
 
         stage('Commit & Push Changes') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'github-cred', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+                withCredentials([usernamePassword(credentialsId: 'git-cred', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
                     sh """
                     git config user.email "jenkins@local"
                     git config user.name "jenkins"
