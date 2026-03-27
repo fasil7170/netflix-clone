@@ -96,17 +96,19 @@ EOF
         }
 
         stage('Build Docker Image') {
-            steps {
-                container('docker') {
-                    sh '''
-                    echo "Waiting for Docker daemon..."
-                    sleep 10
-                    docker info
-                    docker build -t $DOCKER_IMAGE:$TAG user-service/
-                    '''
-                }
-            }
+    steps {
+        container('docker') {
+            sh '''
+            echo "Waiting for Docker daemon..."
+            sleep 10
+            docker info
+
+            cd user-service
+            docker build -t $DOCKER_IMAGE:$TAG .
+            '''
         }
+    }
+}
 
         stage('Push Docker Image') {
             steps {
