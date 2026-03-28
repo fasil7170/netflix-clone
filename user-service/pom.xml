@@ -44,19 +44,27 @@
     <build>
         <plugins>
 
-            <!-- ✅ IMPORTANT FIX: Explicit main class -->
+            <!-- 🔥 FIX: Proper Spring Boot executable JAR -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>3.2.5</version>
                 <configuration>
                     <mainClass>com.netflix.clone.UserServiceApplication</mainClass>
                 </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
         </plugins>
     </build>
 
-    <!-- ✅ Nexus Configuration -->
+    <!-- Nexus -->
     <distributionManagement>
         <repository>
             <id>nexus-releases</id>
