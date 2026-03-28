@@ -33,17 +33,19 @@ spec:
     stages {
 
         stage('Checkout') {
-            steps {
-                checkout([
-                    $class: 'GitSCM',
-                    branches: [[name: '*/main']],
-                    userRemoteConfigs: [[
-                        url: 'https://github.com/fasil7170/netflix-clone.git',
-                        credentialsId: 'github-cred'
-                    ]]
-                ])
-            }
+    steps {
+        container('maven') {
+            checkout([
+                $class: 'GitSCM',
+                branches: [[name: '*/main']],
+                userRemoteConfigs: [[
+                    url: 'https://github.com/fasil7170/netflix-clone.git',
+                    credentialsId: 'github-cred'
+                ]]
+            ])
         }
+    }
+}
 
         stage('Build') {
             steps {
