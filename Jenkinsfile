@@ -159,7 +159,7 @@ EOF
                 passwordVariable: 'GIT_PASS'
             )]) {
                 sh '''
-                echo "DEBUG: workspace"
+                echo "Workspace check"
                 pwd
                 ls -la
 
