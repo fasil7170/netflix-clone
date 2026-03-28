@@ -34,7 +34,6 @@ spec:
 
         stage('Checkout') {
             steps {
-                // ✅ Checkout at agent level (not inside a container)
                 checkout([
                     $class: 'GitSCM',
                     branches: [[name: '*/main']],
@@ -101,9 +100,7 @@ spec:
 </settings>
 EOF
 
-                            echo "Setting dynamic version..."
                             mvn versions:set -DnewVersion=1.0.$BUILD_NUMBER
-
                             mvn deploy -DskipTests
                             '''
                         }
@@ -116,11 +113,9 @@ EOF
             steps {
                 container('docker') {
                     sh '''
-                    echo "Waiting for Docker daemon..."
                     sleep 10
                     docker info
 
-                    echo "Checking JAR file..."
                     ls -la user-service/target
 
                     cd user-service
@@ -143,6 +138,7 @@ EOF
             }
         }
 
+        // ✅ FIXED
         stage('Update K8s Manifest') {
             steps {
                 container('maven') {
@@ -150,42 +146,41 @@ EOF
                     sed -i "s|image:.*|image: $DOCKER_IMAGE:$TAG|" k8s/deployment.yaml
                     '''
                 }
-            }stage('Commit & Push Changes') {
-    steps {
-        container('maven') {
-
-            // ✅ Proper checkout (same as first stage)
-            checkout([
-                $class: 'GitSCM',
-                branches: [[name: '*/main']],
-                userRemoteConfigs: [[
-                    url: 'https://github.com/fasil7170/netflix-clone.git',
-                    credentialsId: 'github-cred'
-                ]]
-            ])
-
-            withCredentials([usernamePassword(
-                credentialsId: 'git-cred',
-                usernameVariable: 'GIT_USER',
-                passwordVariable: 'GIT_PASS'
-            )]) {
-                sh '''
-                echo "DEBUG: Checking workspace"
-                pwd
-                ls -la
-
-                git config user.email "rkftrip@gmail.com"
-                git config user.name "fasil7170"
-
-                git add k8s/deployment.yaml
-                git commit -m "Update image tag" || echo "No changes"
-
-                git push https://${GIT_USER}:${GIT_PASS}@github.com/fasil7170/netflix-clone.git HEAD:main
-                '''
             }
         }
-    }
-}
+
+        // ✅ NOW PROPERLY SEPARATE STAGE
+        stage('Commit & Push Changes') {
+            steps {
+                container('maven') {
+
+                    checkout([
+                        $class: 'GitSCM',
+                        branches: [[name: '*/main']],
+                        userRemoteConfigs: [[
+                            url: 'https://github.com/fasil7170/netflix-clone.git',
+                            credentialsId: 'github-cred'
+                        ]]
+                    ])
+
+                    withCredentials([usernamePassword(
+                        credentialsId: 'git-cred',
+                        usernameVariable: 'GIT_USER',
+                        passwordVariable: 'GIT_PASS'
+                    )]) {
+                        sh '''
+                        git config user.email "rkftrip@gmail.com"
+                        git config user.name "fasil7170"
+
+                        git add k8s/deployment.yaml
+                        git commit -m "Update image tag" || echo "No changes"
+
+                        git push https://${GIT_USER}:${GIT_PASS}@github.com/fasil7170/netflix-clone.git HEAD:main
+                        '''
+                    }
+                }
+            }
         }
 
-       
+    }
+}
