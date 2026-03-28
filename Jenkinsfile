@@ -165,26 +165,32 @@ EOF
         }
 
         stage('Commit & Push Changes') {
-            steps {
-                container('maven') {
-                    withCredentials([usernamePassword(
-                        credentialsId: 'github-cred',
-                        usernameVariable: 'GIT_USER',
-                        passwordVariable: 'GIT_PASS'
-                    )]) {
-                        sh '''
-                        git config user.email "rkftrip@gmail.com"
-                        git config user.name "fasil7170"
+    steps {
+        container('maven') {
+            withCredentials([usernamePassword(
+                credentialsId: 'github-cred',
+                usernameVariable: 'GIT_USER',
+                passwordVariable: 'GIT_PASS'
+            )]) {
+                sh '''
+                echo "Fixing git context..."
 
-                        git add k8s/deployment.yaml
-                        git commit -m "Update image tag" || echo "No changes"
+                # Force git to use correct directory
+                git config --global --add safe.directory /home/jenkins/agent/workspace/netflix-clone
 
-                        git push https://${GIT_USER}:${GIT_PASS}@github.com/fasil7170/netflix-clone.git HEAD:main
-                        '''
-                    }
-                }
+                cd /home/jenkins/agent/workspace/netflix-clone
+
+                ls -la
+
+                git config user.email "rkftrip@gmail.com"
+                git config user.name "fasil7170"
+
+                git add k8s/deployment.yaml
+                git commit -m "Update image tag" || echo "No changes"
+
+                git push https://${GIT_USER}:${GIT_PASS}@github.com/fasil7170/netflix-clone.git HEAD:main
+                '''
             }
         }
-
     }
 }
