@@ -25,6 +25,10 @@ spec:
         }
     }
 
+    options {
+        skipDefaultCheckout(true)
+    }
+
     environment {
         DOCKER_IMAGE = "fazil2664/user-service"
         TAG = "${BUILD_NUMBER}"
@@ -33,19 +37,19 @@ spec:
     stages {
 
         stage('Checkout') {
-    steps {
-        container('maven') {
-            checkout([
-                $class: 'GitSCM',
-                branches: [[name: '*/main']],
-                userRemoteConfigs: [[
-                    url: 'https://github.com/fasil7170/netflix-clone.git',
-                    credentialsId: 'github-cred'
-                ]]
-            ])
+            steps {
+                container('maven') {
+                    checkout([
+                        $class: 'GitSCM',
+                        branches: [[name: '*/main']],
+                        userRemoteConfigs: [[
+                            url: 'https://github.com/fasil7170/netflix-clone.git',
+                            credentialsId: 'github-cred'
+                        ]]
+                    ])
+                }
+            }
         }
-    }
-}
 
         stage('Build') {
             steps {
@@ -85,7 +89,11 @@ spec:
         stage('Upload to Nexus') {
             steps {
                 container('maven') {
-                    withCredentials([usernamePassword(credentialsId: 'nexus-cred', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                    withCredentials([usernamePassword(
+                        credentialsId: 'nexus-cred',
+                        usernameVariable: 'NEXUS_USER',
+                        passwordVariable: 'NEXUS_PASS'
+                    )]) {
                         dir('user-service') {
                             sh '''
                             mkdir -p ~/.m2
@@ -130,7 +138,11 @@ EOF
         stage('Push Docker Image') {
             steps {
                 container('docker') {
-                    withCredentials([usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                    withCredentials([usernamePassword(
+                        credentialsId: 'docker-cred',
+                        usernameVariable: 'USER',
+                        passwordVariable: 'PASS'
+                    )]) {
                         sh '''
                         echo $PASS | docker login -u $USER --password-stdin
                         docker push $DOCKER_IMAGE:$TAG
@@ -140,7 +152,6 @@ EOF
             }
         }
 
-        // ✅ FIXED
         stage('Update K8s Manifest') {
             steps {
                 container('maven') {
@@ -151,30 +162,30 @@ EOF
             }
         }
 
-        // ✅ NOW PROPERLY SEPARATE STAGE
         stage('Commit & Push Changes') {
-    steps {
-        container('maven') {
-            withCredentials([usernamePassword(
-                credentialsId: 'git-cred',
-                usernameVariable: 'GIT_USER',
-                passwordVariable: 'GIT_PASS'
-            )]) {
-                sh '''
-                echo "Workspace check"
-                pwd
-                ls -la
+            steps {
+                container('maven') {
+                    withCredentials([usernamePassword(
+                        credentialsId: 'git-cred',
+                        usernameVariable: 'GIT_USER',
+                        passwordVariable: 'GIT_PASS'
+                    )]) {
+                        sh '''
+                        pwd
+                        ls -la
 
-                git config user.email "rkftrip@gmail.com"
-                git config user.name "fasil7170"
+                        git config user.email "rkftrip@gmail.com"
+                        git config user.name "fasil7170"
 
-                git add k8s/deployment.yaml
-                git commit -m "Update image tag" || echo "No changes"
+                        git add k8s/deployment.yaml
+                        git commit -m "Update image tag" || echo "No changes"
 
-                git push https://${GIT_USER}:${GIT_PASS}@github.com/fasil7170/netflix-clone.git HEAD:main
-                '''
+                        git push https://${GIT_USER}:${GIT_PASS}@github.com/fasil7170/netflix-clone.git HEAD:main
+                        '''
+                    }
+                }
             }
         }
+
     }
-}
 }
