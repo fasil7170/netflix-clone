@@ -163,9 +163,6 @@ EOF
                 pwd
                 ls -la
 
-                # Ensure we are in repo root
-                cd $WORKSPACE
-
                 git config user.email "rkftrip@gmail.com"
                 git config user.name "fasil7170"
 
