@@ -10,13 +10,13 @@ spec:
   containers:
 
   - name: maven
-  image: maven:3.9.9-eclipse-temurin-17
-  command:
-  - sh
-  - -c
-  - |
-    apt-get update && apt-get install -y git && cat
-  tty: true
+    image: maven:3.9.9-eclipse-temurin-17
+    command:
+    - sh
+    - -c
+    - |
+      apt-get update && apt-get install -y git && cat
+    tty: true
 
   - name: docker
     image: docker:24.0.5-dind
@@ -130,8 +130,6 @@ EOF
                     sleep 10
                     docker info
 
-                    ls -la user-service/target
-
                     cd user-service
                     docker build -t $DOCKER_IMAGE:$TAG .
                     '''
@@ -175,9 +173,6 @@ EOF
                         passwordVariable: 'GIT_PASS'
                     )]) {
                         sh '''
-                        pwd
-                        ls -la
-
                         git config user.email "rkftrip@gmail.com"
                         git config user.name "fasil7170"
 
