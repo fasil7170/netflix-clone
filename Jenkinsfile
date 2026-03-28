@@ -10,9 +10,13 @@ spec:
   containers:
 
   - name: maven
-    image: maven:3.9.9-eclipse-temurin-17
-    command: ['cat']
-    tty: true
+  image: maven:3.9.9-eclipse-temurin-17
+  command:
+  - sh
+  - -c
+  - |
+    apt-get update && apt-get install -y git && cat
+  tty: true
 
   - name: docker
     image: docker:24.0.5-dind
