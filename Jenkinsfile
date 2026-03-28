@@ -151,36 +151,30 @@ EOF
 
         // ✅ NOW PROPERLY SEPARATE STAGE
         stage('Commit & Push Changes') {
-            steps {
-                container('maven') {
+    steps {
+        container('maven') {
+            withCredentials([usernamePassword(
+                credentialsId: 'git-cred',
+                usernameVariable: 'GIT_USER',
+                passwordVariable: 'GIT_PASS'
+            )]) {
+                sh '''
+                echo "DEBUG: workspace"
+                pwd
+                ls -la
 
-                    checkout([
-                        $class: 'GitSCM',
-                        branches: [[name: '*/main']],
-                        userRemoteConfigs: [[
-                            url: 'https://github.com/fasil7170/netflix-clone.git',
-                            credentialsId: 'github-cred'
-                        ]]
-                    ])
+                # Ensure we are in repo root
+                cd $WORKSPACE
 
-                    withCredentials([usernamePassword(
-                        credentialsId: 'github-cred',
-                        usernameVariable: 'GIT_USER',
-                        passwordVariable: 'GIT_PASS'
-                    )]) {
-                        sh '''
-                        git config user.email "rkftrip@gmail.com"
-                        git config user.name "fasil7170"
+                git config user.email "rkftrip@gmail.com"
+                git config user.name "fasil7170"
 
-                        git add k8s/deployment.yaml
-                        git commit -m "Update image tag" || echo "No changes"
+                git add k8s/deployment.yaml
+                git commit -m "Update image tag" || echo "No changes"
 
-                        git push https://${GIT_USER}:${GIT_PASS}@github.com/fasil7170/netflix-clone.git HEAD:main
-                        '''
-                    }
-                }
+                git push https://${GIT_USER}:${GIT_PASS}@github.com/fasil7170/netflix-clone.git HEAD:main
+                '''
             }
         }
-
     }
 }
