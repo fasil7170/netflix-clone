@@ -44,7 +44,7 @@
     <build>
         <plugins>
 
-            <!-- 🔥 FIX: Proper Spring Boot executable JAR -->
+            <!-- Spring Boot executable JAR -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
