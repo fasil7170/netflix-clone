@@ -166,7 +166,7 @@ EOF
             steps {
                 container('maven') {
                     withCredentials([usernamePassword(
-                        credentialsId: 'git-cred',
+                        credentialsId: 'github-cred',
                         usernameVariable: 'GIT_USER',
                         passwordVariable: 'GIT_PASS'
                     )]) {
