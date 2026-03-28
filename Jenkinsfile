@@ -56,16 +56,23 @@ spec:
         }
 
         stage('Build') {
-            steps {
-                container('maven') {
-                    dir('user-service') {
-                        sh '''
-                        mvn clean package -DskipTests
-                        '''
-                    }
-                }
+    steps {
+        container('maven') {
+            dir('user-service') {
+                sh '''
+                echo "JAVA VERSION:"
+                java -version
+
+                echo "BUILDING JAR..."
+                mvn clean package -DskipTests
+
+                echo "CHECKING TARGET:"
+                ls -la target
+                '''
             }
         }
+    }
+}
 
         stage('Test') {
             steps {
@@ -123,18 +130,14 @@ EOF
         }
 
         stage('Build Docker Image') {
-            steps {
-                container('docker') {
-                    sh '''
-                    sleep 10
-                    docker info
-
-                    cd user-service
-                    docker build -t $DOCKER_IMAGE:$TAG .
-                    '''
-                }
-            }
+    steps {
+        container('docker') {
+            sh '''
+            docker build --no-cache -t $DOCKER_IMAGE:$TAG user-service
+            '''
         }
+    }
+}
 
         stage('Push Docker Image') {
             steps {
