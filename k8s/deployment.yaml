@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
       - name: user-service
-        image: your-dockerhub/user-service:latest
+        image: fazil2664/user-service:64
         ports:
         - containerPort: 8080
