@@ -14,6 +14,7 @@ spec:
     spec:
       containers:
       - name: user-service
-        image: fazil2664/user-service:66
+        image: fazil2664/user-service:v2   # ✅ UPDATED
+        imagePullPolicy: Always            # ✅ ADD THIS
         ports:
         - containerPort: 8080
